@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChargeRoute — EV Charging Stop Planner</title>
+  <meta name="description" content="ChargeRoute solves one real-world problem — the cheapest EV charging stops for a long trip — with four algorithms: brute force, greedy, dynamic programming and backtracking.">
+  <meta name="theme-color" content="#060913">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23b6ff3b' d='M13 2 4 14h6l-1 8 9-12h-6z'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Animated background (decorative) -->
+  <div class="bg-fx" aria-hidden="true">
+    <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>
+    <span class="grid"></span>
+  </div>
+
+  <!-- ============================ NAV ============================ -->
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="ChargeRoute home">
+      <svg class="brand-bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>
+      <span>Charge<b>Route</b></span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#problem">The problem</a>
+      <a href="#planner">Planner</a>
+      <a href="#results" id="nav-results">Results</a>
+    </nav>
+    <a class="btn small primary" href="#planner">Plan a trip</a>
+  </header>
+
+  <main id="top">
+
+    <!-- ============================ HERO ============================ -->
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow reveal"><span class="pulse-dot"></span> Algorithm Explorer · One problem, four algorithms</p>
+        <h1 class="reveal" style="--d:.08s">Find the <span class="grad">cheapest charging stops</span> for any electric road trip.</h1>
+        <p class="lead reveal" style="--d:.16s">
+          ChargeRoute decides where an EV should stop to recharge so it never runs out of battery
+          <em>and</em> the total bill is as low as possible — and solves it with brute force, greedy,
+          dynamic programming and backtracking so you can see how they differ.
+        </p>
+        <div class="hero-cta reveal" style="--d:.24s">
+          <a class="btn primary big" href="#planner">Open the planner <span aria-hidden="true">⚡</span></a>
+          <a class="btn ghost big" href="#problem">Read the problem</a>
+        </div>
+        <ul class="stats reveal" style="--d:.32s">
+          <li><b data-count="4">0</b><span>Algorithms</span></li>
+          <li><b data-count="1">0</b><span>Real-world problem</span></li>
+          <li><b data-count="20">0</b><span>Stations supported</span></li>
+        </ul>
+      </div>
+
+      <!-- Decorative looping demo: car drives, battery drains, recharges at stations -->
+      <div class="hero-visual reveal" style="--d:.2s" aria-hidden="true">
+        <div class="demo-card">
+          <div class="demo-top">
+            <span class="demo-title">Chennai → Bengaluru</span>
+            <span class="demo-live"><i></i> live demo</span>
+          </div>
+          <div class="demo-road">
+            <div class="demo-line"></div>
+            <div class="demo-station s1"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
+            <div class="demo-station s2"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
+            <div class="demo-car">
+              <svg viewBox="0 0 48 24" width="48" height="24"><path d="M3 17v-4c0-1.6 1.1-2.9 2.6-3.2l5.8-1.2 4-4.2c.6-.6 1.3-.9 2.1-.9h11c.9 0 1.8.4 2.4 1l4.6 4.3 5.4 1.1c1.6.3 2.8 1.7 2.8 3.3v3.8c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2z" fill="currentColor"/><path d="m18 5.5-3.3 3.6h8.8V5.5zM25.5 5.5v3.6h7.3l-3.9-3.6z" fill="#060913" opacity=".55"/><circle cx="14" cy="19" r="3.4" fill="#060913" stroke="currentColor" stroke-width="1.6"/><circle cx="35" cy="19" r="3.4" fill="#060913" stroke="currentColor" stroke-width="1.6"/></svg>
+            </div>
+          </div>
+          <div class="demo-battery">
+            <span>Battery</span>
+            <div class="demo-bar"><i></i></div>
+          </div>
+          <div class="demo-foot">
+            <div><small>Greedy</small><b class="warn">₹840</b></div>
+            <div><small>Cheapest</small><b class="ok">₹350</b></div>
+            <div><small>You save</small><b>₹490</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ PROBLEM ============================ -->
+    <section class="section" id="problem">
+      <div class="section-head reveal">
+        <p class="eyebrow">Step 1 · Understand it</p>
+        <h2>The problem, in plain words</h2>
+        <p>Before any code: what are we solving, why does it matter, and what will the program actually compute?</p>
+      </div>
+
+      <div class="cards-3">
+        <article class="card info reveal" style="--d:.05s">
+          <div class="icon-badge" style="--c:var(--cyan)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+          </div>
+          <h3>What is the problem?</h3>
+          <p>
+            You are driving an electric car on a long highway trip. The battery only covers a fixed
+            <b>range</b>, and the charging stations along the road are at different distances and charge
+            <b>different prices</b>. You must choose <b>where to stop</b> so the car never runs flat
+            and the total charging cost is as low as possible.
+          </p>
+        </article>
+
+        <article class="card info reveal" style="--d:.12s">
+          <div class="icon-badge" style="--c:var(--volt)">
+            <svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+          </div>
+          <h3>Why it matters in real life</h3>
+          <p>
+            EV adoption is growing quickly, but charging networks are uneven: long gaps between chargers,
+            fast-charger price premiums and constant range anxiety. A poor plan means being stranded or
+            overpaying. Navigation apps, fleet operators and bus and cab companies solve exactly this
+            kind of optimisation every day.
+          </p>
+        </article>
+
+        <article class="card info reveal" style="--d:.19s">
+          <div class="icon-badge" style="--c:var(--violet)">
+            <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>
+          </div>
+          <h3>What the program computes</h3>
+          <p>
+            <b>Input:</b> trip distance, battery range, and a list of stations (position in km + charging cost).<br>
+            <b>Output:</b> the set of stops that gets the car from start to destination with <b>no gap longer
+            than the range</b> at the <b>lowest total cost</b> — computed four different ways so you can compare them.
+          </p>
+        </article>
+      </div>
+
+      <p class="assumptions reveal">
+        <b>Assumptions:</b> the car leaves with a full battery · every stop recharges it to full ·
+        each station has one flat price per charge · n = the number of charging stations.
+      </p>
+    </section>
+
+    <!-- ============================ PLANNER ============================ -->
+    <section class="section" id="planner">
+      <div class="section-head reveal">
+        <p class="eyebrow">Step 2 · Enter your trip</p>
+        <h2>Plan your trip</h2>
+        <p>Load a preset or type your own numbers. The route preview below updates as you type — red segments are gaps the battery cannot cross.</p>
+      </div>
+
+      <form id="trip-form" class="card form-card reveal" novalidate autocomplete="off">
+        <div class="presets">
+          <span class="presets-label">Try a preset</span>
+          <button type="button" class="chip" data-preset="demo">Chennai → Bengaluru</button>
+          <button type="button" class="chip" data-preset="big">Long highway · 15 stations</button>
+          <button type="button" class="chip" data-preset="short">Short trip</button>
+          <button type="button" class="chip danger" data-preset="gap">Invalid example</button>
+        </div>
+
+        <div class="grid-2">
+          <div class="field" data-field="distance">
+            <label for="distance">Trip distance</label>
+            <div class="input-wrap">
+              <input id="distance" type="number" inputmode="decimal" step="any" placeholder="e.g. 345" aria-describedby="err-distance">
+              <span class="unit">km</span>
+            </div>
+            <p class="field-error" id="err-distance"></p>
+          </div>
+          <div class="field" data-field="range">
+            <label for="range">Battery range (full charge)</label>
+            <div class="input-wrap">
+              <input id="range" type="number" inputmode="decimal" step="any" placeholder="e.g. 160" aria-describedby="err-range">
+              <span class="unit">km</span>
+            </div>
+            <p class="field-error" id="err-range"></p>
+          </div>
+        </div>
+
+        <div class="stations-head">
+          <h3>Charging stations</h3>
+          <span class="count" id="station-count">0 / 20</span>
+        </div>
+        <div class="st-table" id="stations"></div>
+        <p class="field-error" id="err-stations"></p>
+
+        <div class="row-actions">
+          <button type="button" class="btn ghost small" id="add-station">+ Add station</button>
+          <button type="button" class="btn text small" id="clear-all">Clear all</button>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="preview-head">
+            <span>Live route preview</span>
+            <span class="legend"><i class="lg ok"></i>reachable gap <i class="lg bad"></i>longer than range</span>
+          </div>
+          <div id="preview" class="preview"></div>
+        </div>
+
+        <div class="banner" id="error-banner" role="alert" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.01"/></svg>
+          <div>
+            <strong id="banner-title">Please fix the following</strong>
+            <ul id="banner-list"></ul>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn primary big" id="solve-btn">
+            <span class="btn-label">Find the cheapest plan</span>
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="bolt" aria-hidden="true">⚡</span>
+          </button>
+          <p class="hint">All four algorithms run on the same data, so you can compare them side by side.</p>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============================ RESULTS ============================ -->
+    <section class="section" id="results" hidden>
+      <div class="section-head">
+        <p class="eyebrow">Step 3 · Compare the approaches</p>
+        <h2>Four algorithms, one problem</h2>
+        <p>Switch between the tabs to see how each approach works, its time and space complexity, and the plan it produces for <em>your</em> trip.</p>
+      </div>
+
+      <div class="insight" id="insight" role="status"></div>
+
+      <div class="tabs" id="tabs" role="tablist" aria-label="Algorithm approaches">
+        <span class="tab-indicator" id="tab-indicator"></span>
+      </div>
+      <div id="panels"></div>
+
+      <div class="card compare" id="compare">
+        <div class="card-head">
+          <h3>Side-by-side comparison</h3>
+          <p class="muted">Same trip, four algorithms. Shorter bars mean a cheaper plan.</p>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Approach</th><th>Time complexity</th><th>Stops</th><th>Total cost</th><th>Run time</th><th>Result</th></tr>
+            </thead>
+            <tbody id="compare-body"></tbody>
+          </table>
+        </div>
+        <div class="bars" id="compare-bars"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div>
+      <a class="brand" href="#top"><svg class="brand-bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span>Charge<b>Route</b></span></a>
+      <p>Algorithm Explorer · group project. Built with plain HTML, CSS and JavaScript — no frameworks, so every line of logic is readable.</p>
+    </div>
+    <p class="foot-note">Algorithms live in <code>algorithms.js</code> · interface in <code>app.js</code></p>
+  </footer>
+
+  <script src="algorithms.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
